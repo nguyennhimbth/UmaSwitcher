@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Môi trường ảo
+venv_clean/
+venv/
+.venv/
+
+# Công cụ đóng gói (PyInstaller, Nuitka)
+build/
+dist/
+*.spec
+*.build/
+
+# Cấu hình cá nhân
+uma_config.json
+.vscode/git status
