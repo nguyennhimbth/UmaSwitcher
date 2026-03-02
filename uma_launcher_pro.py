@@ -1,7 +1,9 @@
 """
-Uma Launcher Pro - Version Switcher
-Quản lý phiên bản JP và Global của Umamusume thông qua Symbolic Links.
-Yêu cầu quyền Administrator.
+UmaSwitcher - A More Compilacted Way To Use And Switch Between Umamusume Global and JP version
+Made by: Duy Nguyeen (nguyennhimbth) with help of Gemini 3.0 Flash and 2.5 Flash, Claude Sonnet  4.6
+Copyright (c) 2024. All rights reserved.
+- This project is not affiliated with Cygames or any related entities, and it's not a mod or hack. 
+- Use at your own risk. The author is not responsible for any damage or issues caused by using this software.
 """
 
 import os
@@ -18,9 +20,7 @@ from PIL import Image, ImageDraw
 import pystray
 from pystray import MenuItem as item
 
-# ─────────────────────────────────────────────
-# ĐẢM BẢO QUYỀN ADMIN
-# ─────────────────────────────────────────────
+#Admin check
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
@@ -31,13 +31,12 @@ if not is_admin():
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
     sys.exit()
 
-# ─────────────────────────────────────────────
-# CẤU HÌNH MẶC ĐỊNH
-# ─────────────────────────────────────────────
+#Default Configurations
+
 CONFIG_FILE = "uma_config.json"
 STEAM_APP_ID = "1948430"
 
-# Tên thư mục Symlink riêng biệt theo yêu cầu
+#Symlink names
 SYM_NAME_JP = "umamusume"      # Bản JP dùng viết thường
 SYM_NAME_GLOBAL = "Umamusume"  # Bản Global dùng viết hoa đầu
 
@@ -458,7 +457,7 @@ class UmaLauncher(ctk.CTk):
             self.status_lbl.configure(text=self.texts["status_error_data"], text_color="#dc3545")
             return
 
-        # Xác định tên symlink dựa trên phiên bản yêu cầu
+        # Symlink name based on version
         current_sym_name = SYM_NAME_JP if version == "JP" else SYM_NAME_GLOBAL
         link_path = os.path.normpath(os.path.join(self.config["path_cygames"], current_sym_name))
 
@@ -467,16 +466,16 @@ class UmaLauncher(ctk.CTk):
             if not os.path.exists(parent):
                 os.makedirs(parent, exist_ok=True)
             
-            # Luôn dọn dẹp cả hai (viết hoa và viết thường) trước khi tạo mới để tránh lỗi 706
+            # Clean existing symlinks before creating new one to avoid conflicts/errors
             self.clean_all_symlinks()
             
-            # Tạo liên kết mới với đúng tên yêu cầu (umamusume cho JP, Umamusume cho Global)
+            # Symlink creation using CMD to ensure proper handling of Junctions/Symlinks and avoid error 706
             subprocess.run(f'mklink /D "{link_path}" "{target_data}"', shell=True, check=True)
             
             if self.winfo_exists():
                 self.status_lbl.configure(text=self.texts["status_active"].format(version=version, sym=current_sym_name), text_color="#28a745")
 
-            # Khởi chạy ứng dụng tương ứng
+            # Game launch logic
             if version == "JP":
                 os.startfile("dmmgameplayer://play/GCL/umamusume/cl/win")
             else:
