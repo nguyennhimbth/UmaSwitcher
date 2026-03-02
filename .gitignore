@@ -17,3 +17,10 @@ dist/
 # Cấu hình cá nhân
 uma_config.json
 .vscode/git status
+
+build/
+dist/
+*.spec
+__pycache__/
+venv_clean/
+uma_config.json
