@@ -9,7 +9,7 @@ This utility manages the game's data directory by utilizing symbolic links withi
 **Made by:** Duy Nguyeen (nguyennhimbth)  
 **Collaborators:** Developed with the assistance of Gemini 3 Flash, Gemini 2.5 Flash, and Claude 4.6 Sonnet.
 
-**Copyright (c) 2024. All rights reserved.**
+**Copyright (c) 2024 Duy Nguyeen (nguyennhimbth)** This project is open-sourced under the [GNU GPLv3 License](LICENSE).
 
 ---
 
