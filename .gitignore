@@ -1,28 +1,28 @@
-# Python
+# === Python Bytecode & Cache ===
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Môi trường ảo
-venv_clean/
+# === Virtual Environments ===
 venv/
 .venv/
+venv_clean/
 
-# Công cụ đóng gói (PyInstaller, Nuitka)
+# === Distribution & Build Artifacts ===
+# Artifacts from PyInstaller, Nuitka, etc.
 build/
 dist/
 *.spec
 *.build/
-
-# Cấu hình cá nhân
-uma_config.json
-.vscode/git status
-
-build/
-dist/
-*.spec
-__pycache__/
-venv_clean/
-uma_config.json
-GEMINI.MD
 UmaLauncherPro.exe
+
+# === Editor & IDE Settings ===
+.vscode/
+.idea/
+
+# === Personal Configuration & Local Data ===
+# Sensitive or machine-specific config files
+uma_config.json
+
+# === Documentation & Temp Files ===
+GEMINI.MD
