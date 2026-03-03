@@ -5,7 +5,7 @@ Copyright (c) 2024 Duy Nguyeen (nguyennhimbth, This project is open-sourced unde
 - This project is not affiliated with Cygames or any related entities, and it's not a mod or hack. 
 - Use at your own risk. The author is not responsible for any damage or issues caused by using this software.
 """
-
+#Libraries (included in requirements.txt)
 import os
 import sys
 import json
@@ -27,7 +27,11 @@ def is_admin():
     except:
         return False
 
-if not is_admin():
+# When debugging, sys.gettrace() is not None.
+# We skip the self-elevation when a debugger is attached to prevent it from crashing.
+# The user will need to run their IDE as an administrator for the script to have the
+# necessary permissions to create symlinks.
+if not is_admin() and sys.gettrace() is None:
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
     sys.exit()
 
@@ -44,6 +48,7 @@ TRANSLATIONS = {
     "vi": {
         "title": "CÀI ĐẶT",
         "path_cat": "📁 Đường dẫn",
+        "credits_cat": "ℹ️ Thông tin",
         "ui_cat": "🎨 Giao diện",
         "save_all": "LƯU TẤT CẢ",
         "path_cygames": "Thư mục Cygames (AppData):",
@@ -67,11 +72,17 @@ TRANSLATIONS = {
         "status_cleaned": "Đã dọn dẹp tất cả Symlink.",
         "status_active": "Đã kích hoạt {version} ({sym})!",
         "status_error_data": "Lỗi: Chưa cấu hình đường dẫn data!",
-        "status_error": "Lỗi: {error}"
+        "status_error": "Lỗi: {error}",
+        "credit_made_by": "Làm bởi:",
+        "credit_help_from": "Với sự giúp đỡ của:",
+        "credit_license": "Giấy phép:",
+        "credit_disclaimer_1": "- Dự án này không liên kết với Cygames hoặc bất kỳ đơn vị liên quan nào và không phải là một bản mod hay hack.",
+        "credit_disclaimer_2": "- Tự chịu rủi ro khi sử dụng. Tác giả không chịu trách nhiệm cho bất kỳ thiệt hại hoặc vấn đề nào do sử dụng phần mềm này."
     },
     "en": {
         "title": "SETTINGS",
         "path_cat": "📁 File Paths",
+        "credits_cat": "ℹ️ Credits",
         "ui_cat": "🎨 Appearance",
         "save_all": "SAVE ALL",
         "path_cygames": "Cygames Folder (AppData):",
@@ -95,7 +106,12 @@ TRANSLATIONS = {
         "status_cleaned": "All Symlinks cleaned.",
         "status_active": "Activated {version} ({sym})!",
         "status_error_data": "Error: Data path not configured!",
-        "status_error": "Error: {error}"
+        "status_error": "Error: {error}",
+        "credit_made_by": "Made by:",
+        "credit_help_from": "With help from:",
+        "credit_license": "License:",
+        "credit_disclaimer_1": "- This project is not affiliated with Cygames or any related entities, and it's not a mod or hack.",
+        "credit_disclaimer_2": "- Use at your own risk. The author is not responsible for any damage or issues caused by using this software."
     }
 }
 
@@ -154,6 +170,14 @@ class SettingsWindow(ctk.CTkToplevel):
                                     command=lambda: self.show_page("ui"))
         self.btn_ui.pack(fill="x", padx=10, pady=5)
 
+        self.btn_credits = ctk.CTkButton(self.sidebar_frame, text=self.texts["credits_cat"],
+                                     fg_color="transparent",
+                                     text_color=("gray10", "gray90"),
+                                     hover_color=("gray75", "gray25"),
+                                     anchor="w",
+                                     command=lambda: self.show_page("credits"))
+        self.btn_credits.pack(fill="x", padx=10, pady=5)
+
         self.btn_save = ctk.CTkButton(self.sidebar_frame, text=self.texts["save_all"],
                                       fg_color="#2ecc71", hover_color="#27ae60",
                                       text_color="white", font=ctk.CTkFont(weight="bold"),
@@ -168,6 +192,10 @@ class SettingsWindow(ctk.CTkToplevel):
         # UI Page
         self.ui_page = ctk.CTkFrame(self, fg_color="transparent")
         self.setup_ui_content(self.ui_page)
+
+        # Credits Page
+        self.credits_page = ctk.CTkFrame(self, fg_color="transparent")
+        self.setup_credits_content(self.credits_page)
 
     def setup_path_content(self, parent):
         scroll = ctk.CTkScrollableFrame(parent)
@@ -225,18 +253,72 @@ class SettingsWindow(ctk.CTkToplevel):
         self.gb_color_btn = ctk.CTkButton(content_inner, text=self.texts["pick_color"], fg_color=self.config.get("color_global", "#00a2ed"), text_color="white", command=lambda: self.pick_color("color_global"))
         self.gb_color_btn.pack(anchor="w", pady=(5, 20), fill="x")
 
+    def setup_credits_content(self, parent):
+        content_inner = ctk.CTkFrame(parent, fg_color="transparent")
+        content_inner.pack(expand=True, fill="both", padx=20, pady=20)
+
+        # --- Easy to modify section ---
+        credits_info = {
+            "made_by": "Duy Nguyeen (nguyennhimbth)",
+            "help_from": "Gemini 3.0 Flash and 2.5 Flash, Claude Sonnet 4.6",
+            "license": "GNU GPLv3 License"
+        }
+        # ------------------------------
+
+        self.credits_widgets = {}
+
+        # Made by
+        lbl_made_by_title = ctk.CTkLabel(content_inner, text=self.texts["credit_made_by"], font=ctk.CTkFont(weight="bold"))
+        lbl_made_by_title.pack(anchor="w", pady=(10, 0))
+        lbl_made_by_value = ctk.CTkLabel(content_inner, text=credits_info["made_by"], wraplength=400, justify="left")
+        lbl_made_by_value.pack(anchor="w", padx=(10, 0), pady=(0, 10))
+        self.credits_widgets["made_by_title"] = lbl_made_by_title
+        self.credits_widgets["made_by_value"] = lbl_made_by_value
+
+        # Help from
+        lbl_help_from_title = ctk.CTkLabel(content_inner, text=self.texts["credit_help_from"], font=ctk.CTkFont(weight="bold"))
+        lbl_help_from_title.pack(anchor="w")
+        lbl_help_from_value = ctk.CTkLabel(content_inner, text=credits_info["help_from"], wraplength=400, justify="left")
+        lbl_help_from_value.pack(anchor="w", padx=(10, 0), pady=(0, 10))
+        self.credits_widgets["help_from_title"] = lbl_help_from_title
+        self.credits_widgets["help_from_value"] = lbl_help_from_value
+
+        # License
+        lbl_license_title = ctk.CTkLabel(content_inner, text=self.texts["credit_license"], font=ctk.CTkFont(weight="bold"))
+        lbl_license_title.pack(anchor="w")
+        lbl_license_value = ctk.CTkLabel(content_inner, text=credits_info["license"], wraplength=400, justify="left")
+        lbl_license_value.pack(anchor="w", padx=(10, 0), pady=(0, 20))
+        self.credits_widgets["license_title"] = lbl_license_title
+        self.credits_widgets["license_value"] = lbl_license_value
+
+        # Disclaimer
+        lbl_disclaimer1 = ctk.CTkLabel(content_inner, text=self.texts["credit_disclaimer_1"], wraplength=400, justify="left", text_color="gray")
+        lbl_disclaimer1.pack(anchor="w", pady=(5, 0))
+        lbl_disclaimer2 = ctk.CTkLabel(content_inner, text=self.texts["credit_disclaimer_2"], wraplength=400, justify="left", text_color="gray")
+        lbl_disclaimer2.pack(anchor="w", pady=(5, 0))
+        self.credits_widgets["disclaimer1"] = lbl_disclaimer1
+        self.credits_widgets["disclaimer2"] = lbl_disclaimer2
+
     def show_page(self, page):
         self.path_page.grid_forget()
         self.ui_page.grid_forget()
+        self.credits_page.grid_forget()
         
         if page == "path":
             self.path_page.grid(row=0, column=1, sticky="nsew")
             self.btn_path.configure(fg_color=("gray70", "gray30"), text_color=("#1f6aa5", "#66b3ff"))
             self.btn_ui.configure(fg_color="transparent", text_color=("gray10", "gray90"))
-        else:
+            self.btn_credits.configure(fg_color="transparent", text_color=("gray10", "gray90"))
+        elif page == "ui":
             self.ui_page.grid(row=0, column=1, sticky="nsew")
             self.btn_ui.configure(fg_color=("gray70", "gray30"), text_color=("#1f6aa5", "#66b3ff"))
             self.btn_path.configure(fg_color="transparent", text_color=("gray10", "gray90"))
+            self.btn_credits.configure(fg_color="transparent", text_color=("gray10", "gray90"))
+        else: # credits
+            self.credits_page.grid(row=0, column=1, sticky="nsew")
+            self.btn_credits.configure(fg_color=("gray70", "gray30"), text_color=("#1f6aa5", "#66b3ff"))
+            self.btn_path.configure(fg_color="transparent", text_color=("gray10", "gray90"))
+            self.btn_ui.configure(fg_color="transparent", text_color=("gray10", "gray90"))
 
     def browse(self, entry, is_file):
         path = filedialog.askopenfilename() if is_file else filedialog.askdirectory()
@@ -258,6 +340,7 @@ class SettingsWindow(ctk.CTkToplevel):
         self.side_title.configure(text=self.texts["title"])
         self.btn_path.configure(text=self.texts["path_cat"])
         self.btn_ui.configure(text=self.texts["ui_cat"])
+        self.btn_credits.configure(text=self.texts["credits_cat"])
         
         self.lbl_lang.configure(text=self.texts["lang_select"])
         self.lbl_theme.configure(text=self.texts["system_theme"])
@@ -274,6 +357,13 @@ class SettingsWindow(ctk.CTkToplevel):
         self.appearance_menu.configure(values=[self.texts["dark"], self.texts["light"]])
         current_theme = self.config.get("appearance_mode", "dark")
         self.appearance_menu.set(self.texts["dark"] if current_theme == "dark" else self.texts["light"])
+
+        if hasattr(self, 'credits_widgets'):
+            self.credits_widgets["made_by_title"].configure(text=self.texts["credit_made_by"])
+            self.credits_widgets["help_from_title"].configure(text=self.texts["credit_help_from"])
+            self.credits_widgets["license_title"].configure(text=self.texts["credit_license"])
+            self.credits_widgets["disclaimer1"].configure(text=self.texts["credit_disclaimer_1"])
+            self.credits_widgets["disclaimer2"].configure(text=self.texts["credit_disclaimer_2"])
 
     def update_theme(self, mode_text):
         mode = "dark" if (mode_text == "Tối" or mode_text == "Dark") else "light"
@@ -351,8 +441,8 @@ class UmaLauncher(ctk.CTk):
             text=self.texts["btn_jp"], 
             height=100, 
             corner_radius=12,
-            fg_color=self.config.get("color_jp", "#fd60c9"), # Sửa tại đây
-            hover_color="#e050a0",                           # Sửa tại đây
+            fg_color=self.config.get("color_jp", "#fd60c9"),
+            hover_color="#e050a0",                          
             font=ctk.CTkFont(size=14, weight="bold"),
             command=lambda: self.launch_game("JP")
         )
@@ -435,11 +525,11 @@ class UmaLauncher(ctk.CTk):
             link_path = os.path.normpath(os.path.join(self.config["path_cygames"], name))
             if os.path.lexists(link_path):
                 try:
-                    # Sử dụng lệnh CMD để xóa triệt để Junction/Symlink
+                    # Juncktion/symlink removal
                     subprocess.run(f'cmd /c rmdir /S /Q "{link_path}"', shell=True, check=True)
                 except:
                     try:
-                        # Fallback nếu rmdir thất bại
+                        # rmidir fallback
                         os.remove(link_path)
                     except:
                         pass
