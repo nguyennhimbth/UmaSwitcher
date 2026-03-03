@@ -37,6 +37,7 @@ if not is_admin() and sys.gettrace() is None:
 
 #Default Configurations
 
+APP_VERSION = "1.0.0"
 CONFIG_FILE = "uma_config.json"
 STEAM_APP_ID = "1948430"
 
@@ -46,7 +47,9 @@ SYM_NAME_GLOBAL = "Umamusume"  # Bản Global dùng viết hoa đầu
 
 TRANSLATIONS = {
     "vi": {
+        "app_title": f"UmaSwitcher v{APP_VERSION}",
         "title": "CÀI ĐẶT",
+        "settings_title": "CÀI ĐẶT ĐƯỜNG DẪN",
         "path_cat": "📁 Đường dẫn",
         "credits_cat": "ℹ️ Thông tin",
         "ui_cat": "🎨 Giao diện",
@@ -80,7 +83,9 @@ TRANSLATIONS = {
         "credit_disclaimer_2": "- Tự chịu rủi ro khi sử dụng. Tác giả không chịu trách nhiệm cho bất kỳ thiệt hại hoặc vấn đề nào do sử dụng phần mềm này."
     },
     "en": {
+        "app_title": f"UmaSwitcher v{APP_VERSION}",
         "title": "SETTINGS",
+        "settings_title": "PATH SETTINGS",
         "path_cat": "📁 File Paths",
         "credits_cat": "ℹ️ Credits",
         "ui_cat": "🎨 Appearance",
@@ -130,16 +135,16 @@ DEFAULT_CONFIG = {
 class SettingsWindow(ctk.CTkToplevel):
     def __init__(self, parent, config, save_callback):
         super().__init__(parent)
-        self.title("Cài đặt đường dẫn")
         self.geometry("650x500")
         self.config = config
         self.save_callback = save_callback
         self.attributes('-topmost', True)
         self.grab_set() 
-        
+
         self.lang = self.config.get("language", "vi")
         self.texts = TRANSLATIONS[self.lang]
-        
+        self.title(self.texts["settings_title"])
+
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         
@@ -337,6 +342,7 @@ class SettingsWindow(ctk.CTkToplevel):
             self.save_callback()
 
     def refresh_ui_texts(self):
+        self.title(self.texts["settings_title"])
         self.side_title.configure(text=self.texts["title"])
         self.btn_path.configure(text=self.texts["path_cat"])
         self.btn_ui.configure(text=self.texts["ui_cat"])
@@ -385,20 +391,20 @@ class SettingsWindow(ctk.CTkToplevel):
 class UmaLauncher(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("UmaSwitcher")
         self.geometry("500x320")
-        
+
         ctk.set_default_color_theme("blue")
-        
+
         self.load_config()
         self.tray_icon = None
         self.is_quitting = False
-        
+
         self.protocol("WM_DELETE_WINDOW", self.hide_to_tray)
         ctk.set_appearance_mode(self.config.get("appearance_mode", "dark"))
-        
+
         self.lang = self.config.get("language", "vi")
         self.texts = TRANSLATIONS[self.lang]
+        self.title(self.texts["app_title"])
         self.setup_ui()
         self.init_tray()
 
@@ -483,6 +489,7 @@ class UmaLauncher(ctk.CTk):
         self.status_lbl.pack(side="bottom", pady=(10, 0))
 
     def refresh_main_ui(self):
+        self.title(self.texts["app_title"])
         self.btn_jp.configure(text=self.texts["btn_jp"])
         self.btn_global.configure(text=self.texts["btn_global"])
         self.btn_reset.configure(text=self.texts["btn_reset"])
