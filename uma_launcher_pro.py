@@ -27,7 +27,11 @@ def is_admin():
     except:
         return False
 
-if not is_admin():
+# When debugging, sys.gettrace() is not None.
+# We skip the self-elevation when a debugger is attached to prevent it from crashing.
+# The user will need to run their IDE as an administrator for the script to have the
+# necessary permissions to create symlinks.
+if not is_admin() and sys.gettrace() is None:
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
     sys.exit()
 
