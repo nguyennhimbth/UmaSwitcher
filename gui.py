@@ -1,49 +1,17 @@
-"""
-UmaSwitcher - A More Compilacted Way To Use And Switch Between Umamusume Global and JP version
-Made by: Duy Nguyeen (nguyennhimbth) with help of Gemini 3.0 Flash and 2.5 Flash, Claude Sonnet  4.6
-Copyright (c) 2024 Duy Nguyeen (nguyennhimbth, This project is open-sourced under the [GNU GPLv3 License].
-- This project is not affiliated with Cygames or any related entities, and it's not a mod or hack. 
-- Use at your own risk. The author is not responsible for any damage or issues caused by using this software.
-"""
-#Libraries (included in requirements.txt)
 import os
-import sys
 import json
-import subprocess
 import threading
-import time
-import ctypes
 import customtkinter as ctk
 from tkinter import filedialog, colorchooser
-import psutil
 from PIL import Image, ImageDraw
 import pystray
 from pystray import MenuItem as item
+import sys
 
-#Admin check
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
-
-# When debugging, sys.gettrace() is not None.
-# We skip the self-elevation when a debugger is attached to prevent it from crashing.
-# The user will need to run their IDE as an administrator for the script to have the
-# necessary permissions to create symlinks.
-if not is_admin() and sys.gettrace() is None:
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-    sys.exit()
-
-#Default Configurations
+import logic
 
 APP_VERSION = "1.0.0"
 CONFIG_FILE = "uma_config.json"
-STEAM_APP_ID = "1948430"
-
-#Symlink names
-SYM_NAME_JP = "umamusume"      # Bản JP dùng viết thường
-SYM_NAME_GLOBAL = "Umamusume"  # Bản Global dùng viết hoa đầu
 
 TRANSLATIONS = {
     "vi": {
@@ -206,7 +174,7 @@ class SettingsWindow(ctk.CTkToplevel):
         scroll = ctk.CTkScrollableFrame(parent)
         scroll.pack(fill="both", expand=True, padx=10, pady=10)
         self.entries = {}
-        self.path_widgets = {} # Store labels to update text later
+        self.path_widgets = {}
         
         fields = [
             ("path_cygames", False),
@@ -262,17 +230,14 @@ class SettingsWindow(ctk.CTkToplevel):
         content_inner = ctk.CTkFrame(parent, fg_color="transparent")
         content_inner.pack(expand=True, fill="both", padx=20, pady=20)
 
-        # --- Easy to modify section ---
         credits_info = {
             "made_by": "Duy Nguyeen (nguyennhimbth)",
             "help_from": "Gemini 3.0 Flash and 2.5 Flash, Claude Sonnet 4.6",
             "license": "GNU GPLv3 License"
         }
-        # ------------------------------
 
         self.credits_widgets = {}
 
-        # Made by
         lbl_made_by_title = ctk.CTkLabel(content_inner, text=self.texts["credit_made_by"], font=ctk.CTkFont(weight="bold"))
         lbl_made_by_title.pack(anchor="w", pady=(10, 0))
         lbl_made_by_value = ctk.CTkLabel(content_inner, text=credits_info["made_by"], wraplength=400, justify="left")
@@ -280,7 +245,6 @@ class SettingsWindow(ctk.CTkToplevel):
         self.credits_widgets["made_by_title"] = lbl_made_by_title
         self.credits_widgets["made_by_value"] = lbl_made_by_value
 
-        # Help from
         lbl_help_from_title = ctk.CTkLabel(content_inner, text=self.texts["credit_help_from"], font=ctk.CTkFont(weight="bold"))
         lbl_help_from_title.pack(anchor="w")
         lbl_help_from_value = ctk.CTkLabel(content_inner, text=credits_info["help_from"], wraplength=400, justify="left")
@@ -288,7 +252,6 @@ class SettingsWindow(ctk.CTkToplevel):
         self.credits_widgets["help_from_title"] = lbl_help_from_title
         self.credits_widgets["help_from_value"] = lbl_help_from_value
 
-        # License
         lbl_license_title = ctk.CTkLabel(content_inner, text=self.texts["credit_license"], font=ctk.CTkFont(weight="bold"))
         lbl_license_title.pack(anchor="w")
         lbl_license_value = ctk.CTkLabel(content_inner, text=credits_info["license"], wraplength=400, justify="left")
@@ -296,7 +259,6 @@ class SettingsWindow(ctk.CTkToplevel):
         self.credits_widgets["license_title"] = lbl_license_title
         self.credits_widgets["license_value"] = lbl_license_value
 
-        # Disclaimer
         lbl_disclaimer1 = ctk.CTkLabel(content_inner, text=self.texts["credit_disclaimer_1"], wraplength=400, justify="left", text_color="gray")
         lbl_disclaimer1.pack(anchor="w", pady=(5, 0))
         lbl_disclaimer2 = ctk.CTkLabel(content_inner, text=self.texts["credit_disclaimer_2"], wraplength=400, justify="left", text_color="gray")
@@ -319,7 +281,7 @@ class SettingsWindow(ctk.CTkToplevel):
             self.btn_ui.configure(fg_color=("gray70", "gray30"), text_color=("#1f6aa5", "#66b3ff"))
             self.btn_path.configure(fg_color="transparent", text_color=("gray10", "gray90"))
             self.btn_credits.configure(fg_color="transparent", text_color=("gray10", "gray90"))
-        else: # credits
+        else:
             self.credits_page.grid(row=0, column=1, sticky="nsew")
             self.btn_credits.configure(fg_color=("gray70", "gray30"), text_color=("#1f6aa5", "#66b3ff"))
             self.btn_path.configure(fg_color="transparent", text_color=("gray10", "gray90"))
@@ -425,7 +387,6 @@ class UmaLauncher(ctk.CTk):
         if hasattr(self, 'btn_jp'): self.btn_jp.configure(fg_color=self.config.get("color_jp", "#7cfff5"))
         if hasattr(self, 'btn_global'): self.btn_global.configure(fg_color=self.config.get("color_global", "#00a2ed"))
         
-        # Refresh Main UI Language
         self.lang = self.config.get("language", "vi")
         self.texts = TRANSLATIONS[self.lang]
         self.refresh_main_ui()
@@ -434,14 +395,11 @@ class UmaLauncher(ctk.CTk):
         self.main_container = ctk.CTkFrame(self, fg_color="transparent")
         self.main_container.pack(fill="both", expand=True, padx=20, pady=20)
         
-        # Title
         ctk.CTkLabel(self.main_container, text="UmaSwitcher", font=ctk.CTkFont(size=24, weight="bold")).pack(anchor="w", pady=(10, 5))
 
-        # Button Row
         self.button_row = ctk.CTkFrame(self.main_container, fg_color="transparent")
         self.button_row.pack(fill="x", pady=(0, 10))
 
-        # JP Button
         self.btn_jp = ctk.CTkButton(
             self.button_row, 
             text=self.texts["btn_jp"], 
@@ -454,7 +412,6 @@ class UmaLauncher(ctk.CTk):
         )
         self.btn_jp.pack(side="left", expand=True, padx=(0, 5), fill="both")
 
-        # Global Button
         self.btn_global = ctk.CTkButton(
             self.button_row, 
             text=self.texts["btn_global"], 
@@ -467,7 +424,6 @@ class UmaLauncher(ctk.CTk):
         )
         self.btn_global.pack(side="right", expand=True, padx=(5, 0), fill="both")
 
-        # Reset Button
         self.btn_reset = ctk.CTkButton(
             self.main_container, 
             text=self.texts["btn_reset"], 
@@ -480,11 +436,9 @@ class UmaLauncher(ctk.CTk):
         )
         self.btn_reset.pack(fill="x", pady=(5, 0))
 
-        # Settings Button
         self.btn_settings = ctk.CTkButton(self.main_container, text=self.texts["btn_settings"], fg_color="transparent", text_color="gray", command=lambda: SettingsWindow(self, self.config, self.save_config))
         self.btn_settings.pack(side="bottom", pady=5)
 
-        # Status Label
         self.status_lbl = ctk.CTkLabel(self.main_container, text=self.texts["status_ready"], text_color="gray")
         self.status_lbl.pack(side="bottom", pady=(10, 0))
 
@@ -517,78 +471,22 @@ class UmaLauncher(ctk.CTk):
         self.is_quitting = True
         if self.tray_icon: self.tray_icon.stop()
         self.after(0, self.destroy)
-        os._exit(0)
-
-    def is_process_running(self, name):
-        for p in psutil.process_iter(['name']):
-            try:
-                if p.info['name'] and p.info['name'].lower() == name.lower(): return True
-            except: continue
-        return False
-
-    def clean_all_symlinks(self):
-        """Xóa cả hai loại tên thư mục để tránh xung đột hoặc lỗi 706"""
-        for name in [SYM_NAME_JP, SYM_NAME_GLOBAL]:
-            link_path = os.path.normpath(os.path.join(self.config["path_cygames"], name))
-            if os.path.lexists(link_path):
-                try:
-                    # Juncktion/symlink removal
-                    subprocess.run(f'cmd /c rmdir /S /Q "{link_path}"', shell=True, check=True)
-                except:
-                    try:
-                        # rmidir fallback
-                        os.remove(link_path)
-                    except:
-                        pass
+        sys.exit(0)
 
     def manual_reset_link(self):
-        self.clean_all_symlinks()
+        logic.clean_all_symlinks(self.config["path_cygames"])
         if self.winfo_exists():
             self.status_lbl.configure(text=self.texts["status_cleaned"], text_color="#28a745")
 
     def launch_game(self, version):
-        target_data = os.path.normpath(self.config[f"data_{version.lower()}"])
-        game_exe = self.config[f"game_exe_{version.lower()}"]
-        
-        if not target_data or not os.path.exists(target_data):
-            self.status_lbl.configure(text=self.texts["status_error_data"], text_color="#dc3545")
-            return
-
-        # Symlink name based on version
-        current_sym_name = SYM_NAME_JP if version == "JP" else SYM_NAME_GLOBAL
-        link_path = os.path.normpath(os.path.join(self.config["path_cygames"], current_sym_name))
-
         try:
-            parent = self.config["path_cygames"]
-            if not os.path.exists(parent):
-                os.makedirs(parent, exist_ok=True)
-            
-            # Clean existing symlinks before creating new one to avoid conflicts/errors
-            self.clean_all_symlinks()
-            
-            # Symlink creation using CMD to ensure proper handling of Junctions/Symlinks and avoid error 706
-            subprocess.run(f'mklink /D "{link_path}" "{target_data}"', shell=True, check=True)
-            
+            current_sym_name = logic.launch_game_logic(version, self.config)
             if self.winfo_exists():
                 self.status_lbl.configure(text=self.texts["status_active"].format(version=version, sym=current_sym_name), text_color="#28a745")
-
-            # Game launch logic
-            if version == "JP":
-                os.startfile("dmmgameplayer://play/GCL/umamusume/cl/win")
-            else:
-                if not self.is_process_running("steam.exe"):
-                    os.startfile("steam://")
-                    time.sleep(2)
-                
-                if game_exe and os.path.exists(game_exe):
-                    subprocess.Popen(game_exe, cwd=os.path.dirname(game_exe))
-                else:
-                    os.startfile(f"steam://rungameid/{STEAM_APP_ID}")
+        except ValueError as e:
+            if str(e) == "error_data" and self.winfo_exists():
+                self.status_lbl.configure(text=self.texts["status_error_data"], text_color="#dc3545")
         except Exception as e:
             if self.winfo_exists():
                 self.status_lbl.configure(text=self.texts["status_error"].format(error=str(e)), text_color="#dc3545")
             print(f"Lỗi khởi chạy: {e}")
-
-if __name__ == "__main__":
-    app = UmaLauncher()
-    app.mainloop()

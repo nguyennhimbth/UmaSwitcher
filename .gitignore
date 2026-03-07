@@ -26,3 +26,6 @@ uma_config.json
 
 # === Documentation & Temp Files ===
 GEMINI.MD
+
+# === Old Versions ===
+umaswitcherAIO_(deprecated).py
