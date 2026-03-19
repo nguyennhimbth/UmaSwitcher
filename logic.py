@@ -39,7 +39,7 @@ def clean_all_symlinks(path_cygames):
 def launch_game_logic(version, config):
     """Xử lý logic symlink và khởi chạy game"""
     target_data = os.path.normpath(config[f"data_{version.lower()}"])
-    game_exe = config[f"game_exe_{version.lower()}"]
+    game_exe = config.get(f"game_exe_{version.lower()}")
     path_cygames = config["path_cygames"]
     
     if not target_data or not os.path.exists(target_data):

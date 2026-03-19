@@ -100,6 +100,7 @@ DEFAULT_CONFIG = {
     "path_cygames": os.path.expandvars(r"%USERPROFILE%\AppData\LocalLow\Cygames"),
     "data_jp": "",
     "data_global": "",
+    "game_exe_jp": "",
     "game_exe_global": "",
     "game_exe_jp_launch": "",
     "jp_launch_mode": "gcl",
@@ -529,7 +530,7 @@ class UmaLauncher(ctk.CTk):
         self.is_quitting = True
         if self.tray_icon: self.tray_icon.stop()
         self.after(0, self.destroy)
-        sys.exit(0)
+        os._exit(0)
 
     def manual_reset_link(self):
         logic.clean_all_symlinks(self.config["path_cygames"])
