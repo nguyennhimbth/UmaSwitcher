@@ -25,7 +25,11 @@ TRANSLATIONS = {
         "path_cygames": "Thư mục Cygames (AppData):",
         "data_jp": "Thư mục Data JP gốc:",
         "data_global": "Thư mục Data Global gốc:",
-        "game_exe_jp": "File umamusume.exe (JP - Nhận diện):",
+        "game_exe_jp_launch": "File umamusume.exe (JP - Khởi chạy trực tiếp):",
+        "jp_launch_mode_label": "Chế độ khởi chạy JP:",
+        "jp_mode_gcl": "GCL Shortcut",
+        "jp_mode_exe": "EXE trực tiếp",
+        "jp_mode_note": "Lưu ý: Chế độ GCL sẽ dùng: dmmgameplayer://play/GCL/umamusume/cl/win",
         "game_exe_global": "File umamusume.exe (Global - Khởi chạy):",
         "browse": "Chọn",
         "system_theme": "Chủ đề hệ thống:",
@@ -61,7 +65,11 @@ TRANSLATIONS = {
         "path_cygames": "Cygames Folder (AppData):",
         "data_jp": "Original JP Data Folder:",
         "data_global": "Original Global Data Folder:",
-        "game_exe_jp": "umamusume.exe (JP - Detection):",
+        "game_exe_jp_launch": "umamusume.exe (JP - Direct Launch):",
+        "jp_launch_mode_label": "JP Launch Mode:",
+        "jp_mode_gcl": "GCL Shortcut",
+        "jp_mode_exe": "Direct EXE",
+        "jp_mode_note": "Note: GCL mode uses: dmmgameplayer://play/GCL/umamusume/cl/win",
         "game_exe_global": "umamusume.exe (Global - Launch):",
         "browse": "Browse",
         "system_theme": "System Theme:",
@@ -92,8 +100,9 @@ DEFAULT_CONFIG = {
     "path_cygames": os.path.expandvars(r"%USERPROFILE%\AppData\LocalLow\Cygames"),
     "data_jp": "",
     "data_global": "",
-    "game_exe_jp": "",
     "game_exe_global": "",
+    "game_exe_jp_launch": "",
+    "jp_launch_mode": "gcl",
     "appearance_mode": "dark",
     "language": "vi",
     "color_jp": "#fd60c9",
@@ -180,7 +189,7 @@ class SettingsWindow(ctk.CTkToplevel):
             ("path_cygames", False),
             ("data_jp", False),
             ("data_global", False),
-            ("game_exe_jp", True),
+            ("game_exe_jp_launch", True),
             ("game_exe_global", True)
         ]
         for key, is_file in fields:
@@ -198,6 +207,44 @@ class SettingsWindow(ctk.CTkToplevel):
             btn.pack(side="right")
             
             self.path_widgets[key] = {"label": lbl, "btn": btn}
+
+        # --- CÔNG TẮC CHẾ ĐỘ KHỞI CHẠY JP ---
+        separator = ctk.CTkFrame(scroll, height=2, fg_color=("gray70", "gray30"))
+        separator.pack(fill="x", pady=(15, 5))
+
+        self.lbl_jp_mode = ctk.CTkLabel(
+            scroll, text=self.texts["jp_launch_mode_label"],
+            font=ctk.CTkFont(weight="bold")
+        )
+        self.lbl_jp_mode.pack(anchor="w", pady=(5, 2))
+
+        mode_frame = ctk.CTkFrame(scroll, fg_color="transparent")
+        mode_frame.pack(fill="x", pady=(0, 10))
+
+        self.lbl_mode_gcl = ctk.CTkLabel(mode_frame, text=self.texts["jp_mode_gcl"])
+        self.lbl_mode_gcl.pack(side="left", padx=(0, 8))
+
+        self.jp_mode_switch = ctk.CTkSwitch(
+            mode_frame, text="",
+            onvalue=True, offvalue=False,
+            width=46
+        )
+        # Nếu config đang là "exe" thì bật switch
+        if self.config.get("jp_launch_mode", "gcl") == "exe":
+            self.jp_mode_switch.select()
+        else:
+            self.jp_mode_switch.deselect()
+        self.jp_mode_switch.pack(side="left")
+
+        self.lbl_mode_exe = ctk.CTkLabel(mode_frame, text=self.texts["jp_mode_exe"])
+        self.lbl_mode_exe.pack(side="left", padx=(8, 0))
+
+        self.lbl_jp_note = ctk.CTkLabel(
+            scroll, text=self.texts["jp_mode_note"],
+            font=ctk.CTkFont(size=11, slant="italic"),
+            text_color="gray"
+        )
+        self.lbl_jp_note.pack(anchor="w", pady=(0, 10))
 
     def setup_ui_content(self, parent):
         content_inner = ctk.CTkFrame(parent, fg_color="transparent")
@@ -322,6 +369,16 @@ class SettingsWindow(ctk.CTkToplevel):
             widgets["label"].configure(text=self.texts[key])
             widgets["btn"].configure(text=self.texts["browse"])
         
+        # Cập nhật nhãn công tắc JP mode
+        if hasattr(self, 'lbl_jp_mode'):
+            self.lbl_jp_mode.configure(text=self.texts["jp_launch_mode_label"])
+            self.lbl_mode_gcl.configure(text=self.texts["jp_mode_gcl"])
+            self.lbl_mode_exe.configure(text=self.texts["jp_mode_exe"])
+            self.lbl_jp_note.configure(text=self.texts["jp_mode_note"])
+        if "game_exe_jp_launch" in self.path_widgets:
+            self.path_widgets["game_exe_jp_launch"]["label"].configure(text=self.texts["game_exe_jp_launch"])
+            self.path_widgets["game_exe_jp_launch"]["btn"].configure(text=self.texts["browse"])
+        
         self.appearance_menu.configure(values=[self.texts["dark"], self.texts["light"]])
         current_theme = self.config.get("appearance_mode", "dark")
         self.appearance_menu.set(self.texts["dark"] if current_theme == "dark" else self.texts["light"])
@@ -347,6 +404,7 @@ class SettingsWindow(ctk.CTkToplevel):
 
     def save_all_settings(self):
         new_config = {key: entry.get() for key, entry in self.entries.items()}
+        new_config["jp_launch_mode"] = "exe" if self.jp_mode_switch.get() else "gcl"
         self.save_callback(new_config)
         self.destroy()
 

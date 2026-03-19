@@ -2,10 +2,12 @@
     "path_cygames": "",
     "data_jp": "",
     "data_global": "",
-    "game_exe_jp": "",
     "game_exe_global": "",
-    "appearance_mode": "dark",
+    "game_exe_jp_launch": "",
+    "jp_launch_mode": "gcl",
+    "appearance_mode": "light",
     "language": "en",
     "color_jp": "#fd60c9",
-    "color_global": "#00a2ed"
+    "color_global": "#00a2ed",
+    "game_exe_jp": ""
 }
