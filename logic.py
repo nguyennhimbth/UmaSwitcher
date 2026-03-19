@@ -61,7 +61,15 @@ def launch_game_logic(version, config):
     
     # Game launch logic
     if version == "JP":
-        os.startfile("dmmgameplayer://play/GCL/umamusume/cl/win")
+        jp_mode = config.get("jp_launch_mode", "gcl")
+        game_exe_jp_launch = config.get("game_exe_jp_launch", "")
+
+        if jp_mode == "exe" and game_exe_jp_launch and os.path.exists(game_exe_jp_launch):
+            # Chạy trực tiếp bằng file EXE
+            subprocess.Popen(game_exe_jp_launch, cwd=os.path.dirname(game_exe_jp_launch))
+        else:
+            # Dùng GCL shortcut (mặc định)
+            os.startfile("dmmgameplayer://play/GCL/umamusume/cl/win")
     else:
         if not is_process_running("steam.exe"):
             os.startfile("steam://")
